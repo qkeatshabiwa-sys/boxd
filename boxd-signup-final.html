@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxd — Join the waitlist</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --dark: #0A0A0A;
+  --surface: #141414;
+  --surface2: #1C1C1C;
+  --surface3: #242424;
+  --border: rgba(201,168,76,0.12);
+  --border2: rgba(201,168,76,0.25);
+  --text: #F0EDE6;
+  --muted: #7A7772;
+  --green: #3DB87A;
+  --red: #E05555;
+}
+
+html, body {
+  background: var(--dark);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- LAYOUT ---- */
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .page { grid-template-columns: 1fr; }
+  .left-panel { display: none; }
+}
+
+/* ---- LEFT PANEL ---- */
+.left-panel {
+  background: var(--surface);
+  border-right: 0.5px solid var(--border);
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  background: var(--gold);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--dark);
+}
+
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--gold);
+  letter-spacing: 3px;
+}
+
+.left-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.left-hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+
+.left-hero h1 span {
+  color: var(--gold);
+}
+
+.left-hero p {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 340px;
+  margin-bottom: 36px;
+}
+
+.proof-items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.proof-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.proof-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+.proof-item p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.proof-item p strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.left-bottom {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- RIGHT PANEL / FORM ---- */
+.right-panel {
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .right-panel { padding: 32px 20px; }
+}
+
+.mobile-brand {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 768px) {
+  .mobile-brand { display: flex; }
+}
+
+.form-wrap {
+  max-width: 420px;
+  width: 100%;
+}
+
+.step-indicator {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+
+.step-dot {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--surface3);
+  transition: all 0.3s;
+  flex: 1;
+}
+
+.step-dot.active { background: var(--gold); }
+.step-dot.done { background: var(--gold-dim); border: 0.5px solid var(--gold); }
+
+.step-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.step-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ---- FORM ELEMENTS ---- */
+.field-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+
+input:focus, select:focus {
+  border-color: var(--gold);
+}
+
+input::placeholder { color: var(--muted); }
+
+select option {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ---- TIER CARDS ---- */
+.tier-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.tier-card {
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tier-card:hover { border-color: rgba(201,168,76,0.3); }
+
+.tier-card.selected {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.06);
+}
+
+.tier-card-left h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.tier-card-left p {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tier-card-right {
+  text-align: right;
+}
+
+.tier-price {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.tier-freq {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.tier-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(201,168,76,0.12);
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+/* ---- FREQUENCY ---- */
+.freq-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.freq-opt {
+  padding: 10px;
+  background: var(--surface2);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.freq-opt.selected {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.06);
+}
+
+.freq-opt h5 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.freq-opt p {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ---- BUTTONS ---- */
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  border-radius: 8px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  margin-top: 20px;
+}
+
+.btn-primary:hover { background: var(--gold-light); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 14px;
+  display: block;
+  text-align: center;
+  transition: color 0.15s;
+}
+
+.btn-back:hover { color: var(--text); }
+
+/* ---- ERROR / SUCCESS ---- */
+.error-msg {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 6px;
+  display: none;
+}
+
+.success-screen {
+  text-align: center;
+  display: none;
+  padding: 20px 0;
+}
+
+.success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(61,184,122,0.12);
+  border: 0.5px solid rgba(61,184,122,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 22px;
+}
+
+.success-screen h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.success-screen p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.referral-box {
+  background: var(--surface2);
+  border: 0.5px solid var(--border2);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 20px;
+  text-align: left;
+}
+
+.referral-box label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.referral-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.referral-link {
+  flex: 1;
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--gold);
+  background: var(--surface3);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy-btn {
+  padding: 8px 14px;
+  background: none;
+  border: 0.5px solid var(--border2);
+  border-radius: 6px;
+  color: var(--gold);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.copy-btn:hover { background: var(--gold-dim); }
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: var(--dark);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="brand">
+      <div class="brand-mark">B</div>
+      <div class="brand-name">BOXD</div>
+    </div>
+
+    <div class="left-hero">
+      <h1>Your household<br>essentials,<br><span>delivered.</span></h1>
+      <p>Subscribe once. Receive your curated box of staples every week or fortnight. No queues. No guesswork. Delivered to your door in Gaborone.</p>
+
+      <div class="proof-items">
+        <div class="proof-item">
+          <div class="proof-dot"></div>
+          <p><strong>Real Gaborone brands</strong> — Iwisa, Sunfoil, Freshpak, Albany and more. What your neighbors actually use.</p>
+        </div>
+        <div class="proof-item">
+          <div class="proof-dot"></div>
+          <p><strong>Swap anything</strong> — not the right brand? Tell us why and we replace it. Your box, your preferences.</p>
+        </div>
+        <div class="proof-item">
+          <div class="proof-dot"></div>
+          <p><strong>Predictable spend</strong> — one price, same box, every cycle. No surprise bills at the till.</p>
+        </div>
+        <div class="proof-item">
+          <div class="proof-dot"></div>
+          <p><strong>Refer a neighbor</strong> — earn P50 for every household you bring in.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="left-bottom">
+      Gaborone, Botswana · Beta launch 2026
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <div class="mobile-brand">
+      <div class="brand-mark">B</div>
+      <div class="brand-name">BOXD</div>
+    </div>
+
+    <div class="form-wrap">
+
+      <!-- STEP INDICATORS -->
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+      </div>
+
+      <!-- STEP 1: PERSONAL INFO -->
+      <div id="step-1">
+        <div class="step-title">Create your account</div>
+        <div class="step-sub">Start with the basics. Takes 2 minutes.</div>
+
+        <div class="field-group">
+          <label>Full name</label>
+          <input type="text" id="name" placeholder="Kelebogile Ditsebe" autocomplete="name">
+        </div>
+
+        <div class="field-group">
+          <label>Phone number</label>
+          <input type="tel" id="phone" placeholder="+267 7X XXX XXX" autocomplete="tel">
+        </div>
+
+        <div class="field-group">
+          <label>Email address</label>
+          <input type="email" id="email" placeholder="kele@example.com" autocomplete="email">
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>Neighborhood</label>
+            <select id="neighborhood">
+              <option value="">Select...</option>
+              <option>Phakalane</option>
+              <option>Block 9</option>
+              <option>Extension 15</option>
+              <option>Broadhurst</option>
+              <option>Tlokweng</option>
+              <option>Phase 2</option>
+              <option>Molapo</option>
+              <option>Gaborone West</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Household size</label>
+            <select id="household_size">
+              <option value="1">Just me</option>
+              <option value="2">2 people</option>
+              <option value="3">3 people</option>
+              <option value="4" selected>4 people</option>
+              <option value="5">5 people</option>
+              <option value="6">6+ people</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="error-msg" id="err-1">Please fill in all fields.</div>
+        <button class="btn-primary" onclick="goToStep2()">Continue →</button>
+      </div>
+
+      <!-- STEP 2: CHOOSE BOX -->
+      <div id="step-2" style="display:none">
+        <div class="step-title">Choose your box</div>
+        <div class="step-sub">Pick a tier and how often you want it.</div>
+
+        <div class="tier-cards" id="tier-cards">
+          <div class="tier-card selected" data-tier="essentials" data-price="280" onclick="selectTier(this)">
+            <div class="tier-card-left">
+              <h4>Essentials Box</h4>
+              <p>~12 staple items · perfect for 2–4 people</p>
+            </div>
+            <div class="tier-card-right">
+              <div class="tier-badge">Most popular</div>
+              <div class="tier-price">P 280</div>
+              <div class="tier-freq">per delivery</div>
+            </div>
+          </div>
+
+          <div class="tier-card" data-tier="family" data-price="480" onclick="selectTier(this)">
+            <div class="tier-card-left">
+              <h4>Family Box</h4>
+              <p>~22 items · staples + household care</p>
+            </div>
+            <div class="tier-card-right">
+              <div class="tier-price">P 480</div>
+              <div class="tier-freq">per delivery</div>
+            </div>
+          </div>
+
+          <div class="tier-card" data-tier="premium" data-price="720" onclick="selectTier(this)">
+            <div class="tier-card-left">
+              <h4>Premium Box</h4>
+              <p>~18 items · staples + local + discovery item</p>
+            </div>
+            <div class="tier-card-right">
+              <div class="tier-price">P 720</div>
+              <div class="tier-freq">per delivery</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px; margin-bottom:8px;">
+          <label>How often?</label>
+        </div>
+        <div class="freq-row">
+          <div class="freq-opt" data-freq="weekly" onclick="selectFreq(this)">
+            <h5>Weekly</h5>
+            <p>Every 7 days</p>
+          </div>
+          <div class="freq-opt selected" data-freq="biweekly" onclick="selectFreq(this)">
+            <h5>Biweekly</h5>
+            <p>Every 14 days</p>
+          </div>
+          <div class="freq-opt" data-freq="monthly" onclick="selectFreq(this)">
+            <h5>Monthly</h5>
+            <p>Once a month</p>
+          </div>
+        </div>
+
+        <div class="error-msg" id="err-2">Please select a box and frequency.</div>
+        <button class="btn-primary" onclick="goToStep3()">Continue →</button>
+        <button class="btn-back" onclick="goToStep(1)">← Back</button>
+      </div>
+
+      <!-- STEP 3: CONFIRM -->
+      <div id="step-3" style="display:none">
+        <div class="step-title">Confirm your box</div>
+        <div class="step-sub">Review your details before we lock you in.</div>
+
+        <div style="background:var(--surface2); border:0.5px solid var(--border2); border-radius:10px; padding:16px; margin-bottom:20px;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--muted)">Name</span>
+            <span id="confirm-name" style="font-weight:500"></span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--muted)">Phone</span>
+            <span id="confirm-phone"></span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--muted)">Neighborhood</span>
+            <span id="confirm-neighborhood"></span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--muted)">Box</span>
+            <span id="confirm-tier" style="color:var(--gold); font-weight:500; text-transform:capitalize;"></span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:7px 0; border-bottom:0.5px solid var(--border);">
+            <span style="color:var(--muted)">Frequency</span>
+            <span id="confirm-freq" style="text-transform:capitalize;"></span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px; padding:9px 0;">
+            <span style="color:var(--muted)">Per delivery</span>
+            <span id="confirm-price" style="color:var(--gold); font-family:'Syne',sans-serif; font-weight:700; font-size:16px;"></span>
+          </div>
+        </div>
+
+        <div style="font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:4px;">
+          By joining the waitlist you agree to be contacted via WhatsApp when Boxd launches in your neighborhood. No payment collected yet.
+        </div>
+
+        <div class="error-msg" id="err-3">Something went wrong. Please try again.</div>
+        <button class="btn-primary" id="submit-btn" onclick="submitSignup()">Join waitlist →</button>
+        <button class="btn-back" onclick="goToStep(2)">← Back</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="success-screen" id="success-screen">
+        <div class="success-icon">✓</div>
+        <h2>You're on the list.</h2>
+        <p>We'll WhatsApp you when Boxd launches in <span id="success-neighborhood"></span>. First 50 subscribers get their first box free.</p>
+
+        <div class="referral-box">
+          <label>Share your referral link</label>
+          <div style="font-size:12px; color:var(--muted); margin-bottom:10px; margin-top:4px;">Earn P50 for every neighbor you bring in.</div>
+          <div class="referral-link-row">
+            <div class="referral-link" id="referral-link-display">boxd.app/join?ref=...</div>
+            <button class="copy-btn" onclick="copyReferral()">Copy</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CONFIGURATION — replace with your Supabase credentials
+// ============================================
+const SUPABASE_URL = 'https://rctoxlqcitcpsirbllrk.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdG94bHFjaXRjcHNpcmJsbHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDM4MzgsImV4cCI6MjA5NTkxOTgzOH0.hQK1HKvd2YWMfCn1zKCITa7MXTsVEYx41WCrc3FZ0Ao'
+const APP_URL = 'https://boxd.app'
+
+// Initialize Supabase
+const { createClient } = supabase
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// ============================================
+// STATE
+// ============================================
+let currentStep = 1
+let selectedTier = 'essentials'
+let selectedPrice = 280
+let selectedFreq = 'biweekly'
+let householdReferralCode = ''
+
+// Read UTM params and referral code from URL on load
+const urlParams = new URLSearchParams(window.location.search)
+const utmSource = urlParams.get('utm_source') || ''
+const utmMedium = urlParams.get('utm_medium') || ''
+const utmCampaign = urlParams.get('utm_campaign') || ''
+const refCode = urlParams.get('ref') || ''
+
+// Generate anonymous fingerprint for pre-signup tracking
+const fingerprintId = localStorage.getItem('boxd_fp') || (() => {
+  const fp = 'fp_' + Math.random().toString(36).substr(2, 12)
+  localStorage.setItem('boxd_fp', fp)
+  return fp
+})()
+
+// Track page view immediately
+trackPreSignupEvent('page_viewed', {
+  utm_source: utmSource,
+  utm_medium: utmMedium,
+  utm_campaign: utmCampaign,
+  ref_code: refCode,
+  landing_page: window.location.pathname
+})
+
+// ============================================
+// PRE-SIGNUP TRACKING (anonymous)
+// ============================================
+async function trackPreSignupEvent(eventType, properties = {}) {
+  try {
+    await db.from('events').insert({
+      event_type: eventType,
+      event_properties: {
+        ...properties,
+        fingerprint_id: fingerprintId,
+        session_id: fingerprintId
+      },
+      session_id: fingerprintId,
+      device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+    })
+  } catch (e) {
+    // Silent fail — never block UX for tracking
+    console.log('Track event:', eventType, properties)
+  }
+}
+
+// ============================================
+// STEP NAVIGATION
+// ============================================
+function goToStep(n) {
+  document.getElementById('step-' + currentStep).style.display = 'none'
+  document.getElementById('dot-' + currentStep).classList.remove('active')
+  document.getElementById('dot-' + currentStep).classList.add('done')
+
+  currentStep = n
+  document.getElementById('step-' + n).style.display = 'block'
+  document.getElementById('dot-' + n).classList.add('active')
+  document.getElementById('dot-' + n).classList.remove('done')
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function goToStep2() {
+  const name = document.getElementById('name').value.trim()
+  const phone = document.getElementById('phone').value.trim()
+  const email = document.getElementById('email').value.trim()
+  const neighborhood = document.getElementById('neighborhood').value
+
+  if (!name || !phone || !neighborhood) {
+    document.getElementById('err-1').style.display = 'block'
+    return
+  }
+
+  document.getElementById('err-1').style.display = 'none'
+  trackPreSignupEvent('step_1_completed', { neighborhood })
+  goToStep(2)
+}
+
+function goToStep3() {
+  document.getElementById('err-2').style.display = 'none'
+
+  // Populate confirm screen
+  document.getElementById('confirm-name').textContent = document.getElementById('name').value.trim()
+  document.getElementById('confirm-phone').textContent = document.getElementById('phone').value.trim()
+  document.getElementById('confirm-neighborhood').textContent = document.getElementById('neighborhood').value
+  document.getElementById('confirm-tier').textContent = selectedTier + ' box'
+  document.getElementById('confirm-freq').textContent = selectedFreq
+  document.getElementById('confirm-price').textContent = 'P ' + selectedPrice
+
+  trackPreSignupEvent('tier_selected', { tier: selectedTier, frequency: selectedFreq, price: selectedPrice })
+  goToStep(3)
+}
+
+// ============================================
+// TIER + FREQUENCY SELECTION
+// ============================================
+function selectTier(el) {
+  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'))
+  el.classList.add('selected')
+  selectedTier = el.dataset.tier
+  selectedPrice = parseInt(el.dataset.price)
+  trackPreSignupEvent('tier_viewed', { tier: selectedTier })
+}
+
+function selectFreq(el) {
+  document.querySelectorAll('.freq-opt').forEach(f => f.classList.remove('selected'))
+  el.classList.add('selected')
+  selectedFreq = el.dataset.freq
+}
+
+// ============================================
+// SUBMIT — writes to Supabase
+// ============================================
+async function submitSignup() {
+  const btn = document.getElementById('submit-btn')
+  btn.disabled = true
+  btn.innerHTML = '<span class="loading-spinner"></span>Joining...'
+
+  const name = document.getElementById('name').value.trim()
+  const phone = document.getElementById('phone').value.trim()
+  const email = document.getElementById('email').value.trim()
+  const neighborhood = document.getElementById('neighborhood').value
+  const householdSize = parseInt(document.getElementById('household_size').value)
+
+  // Resolve acquisition source
+  let source = 'organic'
+  if (refCode) source = 'referral'
+  else if (utmSource === 'instagram') source = 'instagram'
+  else if (utmSource === 'whatsapp') source = 'whatsapp'
+  else if (utmSource === 'google') source = 'google'
+
+  try {
+    // 1. Insert household
+    const { data: household, error: hErr } = await db
+      .from('households')
+      .insert({
+        name,
+        phone,
+        email: email || null,
+        neighborhood,
+        zone: neighborhood,
+        household_size: householdSize,
+        current_tier: selectedTier,
+        frequency: selectedFreq,
+        acquisition_source: source,
+        status: 'active'
+      })
+      .select()
+      .single()
+
+    if (hErr) throw hErr
+
+    householdReferralCode = household.referral_code
+
+    // 2. Insert subscription
+    await db.from('subscriptions').insert({
+      household_id: household.id,
+      tier: selectedTier,
+      frequency: selectedFreq,
+      price_bwp: selectedPrice,
+      status: 'active'
+    })
+
+    // 3. Insert acquisition touchpoint with full attribution
+    await db.from('acquisition_touchpoints').insert({
+      fingerprint_id: fingerprintId,
+      household_id: household.id,
+      source,
+      medium: utmMedium || (refCode ? 'referral' : 'direct'),
+      utm_source: utmSource || null,
+      utm_medium: utmMedium || null,
+      utm_campaign: utmCampaign || null,
+      referrer_type: refCode ? 'customer' : 'none',
+      landing_page: window.location.pathname,
+      device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+      converted_at: new Date().toISOString()
+    })
+
+    // 4. Log signup_completed event
+    await db.from('events').insert({
+      household_id: household.id,
+      event_type: 'signup_completed',
+      event_properties: {
+        tier: selectedTier,
+        frequency: selectedFreq,
+        price_bwp: selectedPrice,
+        source,
+        neighborhood,
+        household_size: householdSize,
+        fingerprint_id: fingerprintId,
+        ref_code: refCode || null
+      },
+      session_id: fingerprintId,
+      zone: neighborhood,
+      neighborhood,
+      device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop'
+    })
+
+    // 5. Show success
+    showSuccess(household, neighborhood)
+
+  } catch (err) {
+    console.error(err)
+    document.getElementById('err-3').textContent = 
+      err.message?.includes('unique') 
+        ? 'This phone number is already registered.' 
+        : 'Something went wrong. Please try again.'
+    document.getElementById('err-3').style.display = 'block'
+    btn.disabled = false
+    btn.textContent = 'Join waitlist →'
+  }
+}
+
+// ============================================
+// SUCCESS STATE
+// ============================================
+function showSuccess(household, neighborhood) {
+  document.getElementById('step-3').style.display = 'none'
+  document.getElementById('success-screen').style.display = 'block'
+  document.getElementById('success-neighborhood').textContent = neighborhood
+
+  const referralUrl = `${APP_URL}/join?ref=${household.referral_code}`
+  document.getElementById('referral-link-display').textContent = referralUrl
+  document.getElementById('referral-link-display').dataset.url = referralUrl
+
+  // Update all step dots to done
+  document.querySelectorAll('.step-dot').forEach(d => {
+    d.classList.remove('active')
+    d.classList.add('done')
+  })
+
+  // Log referral_link_generated event
+  db.from('events').insert({
+    household_id: household.id,
+    event_type: 'referral_link_generated',
+    event_properties: { referral_code: household.referral_code },
+    zone: neighborhood,
+    neighborhood
+  })
+}
+
+// ============================================
+// COPY REFERRAL LINK
+// ============================================
+function copyReferral() {
+  const url = document.getElementById('referral-link-display').dataset.url || 
+              document.getElementById('referral-link-display').textContent
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.copy-btn')
+    btn.textContent = 'Copied!'
+    setTimeout(() => { btn.textContent = 'Copy' }, 2000)
+  })
+}
+</script>
+</body>
+</html>
