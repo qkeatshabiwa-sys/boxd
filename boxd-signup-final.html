@@ -6,6 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boxd — Join the waitlist</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_z5szFXn7sqpSoBSJXnXoxQ6iDU4oN4QaDhib7XbSkU23', {
+  api_host: 'https://us.i.posthog.com',
+  autocapture: true,
+  capture_pageview: true,
+  session_recording: { maskAllInputs: false }
+})
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
 
@@ -42,12 +51,9 @@ html, body {
   grid-template-columns: 1fr 1fr;
 }
 
-@media (max-width: 900px) {
-  .page { grid-template-columns: 1fr !important; }
-  .left-panel { display: none !important; }
-  .right-panel { min-height: 100vh; padding: 32px 20px; }
-  .form-wrap { max-width: 100% !important; width: 100% !important; }
-  .mobile-brand { display: flex !important; }
+@media (max-width: 768px) {
+  .page { grid-template-columns: 1fr; }
+  .left-panel { display: none; }
 }
 
 /* ---- LEFT PANEL ---- */
@@ -177,6 +183,10 @@ html, body {
   align-items: center;
   gap: 10px;
   margin-bottom: 36px;
+}
+
+@media (max-width: 768px) {
+  .mobile-brand { display: flex; }
 }
 
 .form-wrap {
@@ -836,6 +846,7 @@ function goToStep2() {
 
   document.getElementById('err-1').style.display = 'none'
   trackPreSignupEvent('step_1_completed', { neighborhood })
+  if(window.posthog) posthog.capture('step_1_completed', {neighborhood})
   goToStep(2)
 }
 
@@ -851,6 +862,7 @@ function goToStep3() {
   document.getElementById('confirm-price').textContent = 'P ' + selectedPrice
 
   trackPreSignupEvent('tier_selected', { tier: selectedTier, frequency: selectedFreq, price: selectedPrice })
+  if(window.posthog) posthog.capture('tier_selected', {tier: selectedTier, frequency: selectedFreq, price: selectedPrice})
   goToStep(3)
 }
 
@@ -863,6 +875,7 @@ function selectTier(el) {
   selectedTier = el.dataset.tier
   selectedPrice = parseInt(el.dataset.price)
   trackPreSignupEvent('tier_viewed', { tier: selectedTier })
+  if(window.posthog) posthog.capture('tier_viewed', {tier: selectedTier, price: selectedPrice})
 }
 
 function selectFreq(el) {
@@ -914,6 +927,21 @@ async function submitSignup() {
     if (hErr) throw hErr
 
     householdReferralCode = household.referral_code
+
+    // Posthog identify + signup event
+    if(window.posthog) {
+      posthog.identify(household.id, {
+        name, phone, email: email||null,
+        neighborhood, household_size: householdSize,
+        tier: selectedTier, frequency: selectedFreq,
+        acquisition_source: source
+      })
+      posthog.capture('signup_completed', {
+        tier: selectedTier, frequency: selectedFreq,
+        price_bwp: selectedPrice, neighborhood, source,
+        household_size: householdSize
+      })
+    }
 
     // 2. Insert subscription
     await db.from('subscriptions').insert({
