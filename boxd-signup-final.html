@@ -42,9 +42,12 @@ html, body {
   grid-template-columns: 1fr 1fr;
 }
 
-@media (max-width: 768px) {
-  .page { grid-template-columns: 1fr; }
-  .left-panel { display: none; }
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr !important; }
+  .left-panel { display: none !important; }
+  .right-panel { min-height: 100vh; padding: 32px 20px; }
+  .form-wrap { max-width: 100% !important; width: 100% !important; }
+  .mobile-brand { display: flex !important; }
 }
 
 /* ---- LEFT PANEL ---- */
@@ -174,10 +177,6 @@ html, body {
   align-items: center;
   gap: 10px;
   margin-bottom: 36px;
-}
-
-@media (max-width: 768px) {
-  .mobile-brand { display: flex; }
 }
 
 .form-wrap {
@@ -748,11 +747,12 @@ select option {
 // CONFIGURATION — replace with your Supabase credentials
 // ============================================
 const SUPABASE_URL = 'https://rctoxlqcitcpsirbllrk.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_wzVIYZigALkOCpuHjd07jA_Av-OsTph'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdG94bHFjaXRjcHNpcmJsbHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDM4MzgsImV4cCI6MjA5NTkxOTgzOH0.hQK1HKvd2YWMfCn1zKCITa7MXTsVEYx41WCrc3FZ0Ao'
 const APP_URL = 'https://boxd.app'
 
 // Initialize Supabase
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const { createClient } = supabase
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // ============================================
 // STATE
