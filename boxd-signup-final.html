@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -747,12 +748,11 @@ select option {
 // CONFIGURATION — replace with your Supabase credentials
 // ============================================
 const SUPABASE_URL = 'https://rctoxlqcitcpsirbllrk.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdG94bHFjaXRjcHNpcmJsbHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDM4MzgsImV4cCI6MjA5NTkxOTgzOH0.hQK1HKvd2YWMfCn1zKCITa7MXTsVEYx41WCrc3FZ0Ao'
+const SUPABASE_ANON_KEY = 'sb_publishable_wzVIYZigALkOCpuHjd07jA_Av-OsTph'
 const APP_URL = 'https://boxd.app'
 
 // Initialize Supabase
-const { createClient } = supabase
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // ============================================
 // STATE
