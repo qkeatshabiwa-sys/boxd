@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boxd — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C9A84C;--gold-light:#E8C97A;--gold-dim:rgba(201,168,76,0.12);
+  --dark:#0A0A0A;--surface:#141414;--surface2:#1C1C1C;--surface3:#242424;
+  --border:rgba(201,168,76,0.1);--border2:rgba(201,168,76,0.25);
+  --text:#F0EDE6;--muted:#7A7772;--green:#3DB87A;--red:#E05555;--blue:#5B9EF5;
+}
+html,body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* MOBILE BOTTOM NAV */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:0.5px solid var(--border);z-index:50;padding:8px 0 max(8px, env(safe-area-inset-bottom))}
+.bottom-nav-items{display:flex;justify-content:space-around}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 12px;cursor:pointer;border:none;background:none;color:var(--muted);transition:color 0.15s;font-family:'DM Sans',sans-serif}
+.bottom-nav-item.active{color:var(--gold)}
+.bottom-nav-icon{font-size:16px}
+.bottom-nav-label{font-size:10px;letter-spacing:0.3px}
+
+/* DESKTOP LAYOUT */
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:0.5px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:8px;margin-bottom:16px}
+.brand-mark{width:30px;height:30px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:var(--dark)}
+.brand-name{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--gold);letter-spacing:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--gold-dim);color:var(--gold);border:0.5px solid var(--border2)}
+.nav-icon{font-size:14px;width:16px;text-align:center}
+.nav-section{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:12px 12px 6px;margin-top:8px}
+.sidebar-bottom{margin-top:auto;padding-top:16px;border-top:0.5px solid var(--border)}
+.dispatch-btn{width:100%;padding:10px;background:var(--gold);color:var(--dark);border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;transition:background 0.15s}
+.dispatch-btn:hover{background:var(--gold-light)}
+
+/* MAIN */
+.main{padding:28px;overflow-y:auto}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.refresh-btn{padding:7px 12px;background:none;border:0.5px solid var(--border2);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.metric{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:14px}
+.metric-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px}
+.metric-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:var(--text)}
+.metric-value.gold{color:var(--gold)}
+.metric-value.green{color:var(--green)}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* SECTIONS */
+.section{margin-bottom:24px}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;overflow:hidden}
+.table-head{display:grid;padding:10px 14px;background:var(--surface2);border-bottom:0.5px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted)}
+.hg{grid-template-columns:2fr 1.2fr 1fr 1fr 0.8fr}
+.table-row{display:grid;padding:11px 14px;border-bottom:0.5px solid var(--border);font-size:12px;align-items:center;transition:background 0.1s}
+.table-row:last-child{border-bottom:none}
+.table-row:hover{background:var(--surface2)}
+.cell-name{font-weight:500;color:var(--text)}
+.cell-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.cell-muted{color:var(--muted)}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.badge-essentials{background:rgba(91,158,245,0.1);color:var(--blue)}
+.badge-family{background:rgba(201,168,76,0.1);color:var(--gold)}
+.badge-premium{background:rgba(61,184,122,0.1);color:var(--green)}
+.badge-active{background:rgba(61,184,122,0.1);color:var(--green)}
+.badge-organic{background:var(--surface3);color:var(--muted)}
+.badge-referral{background:rgba(201,168,76,0.1);color:var(--gold)}
+.badge-instagram{background:rgba(216,90,48,0.1);color:#D85A30}
+.badge-whatsapp{background:rgba(61,184,122,0.1);color:var(--green)}
+
+/* MOBILE CARDS — subscriber view */
+.sub-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px}
+.sub-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.sub-card-name{font-size:14px;font-weight:500}
+.sub-card-time{font-size:11px;color:var(--muted)}
+.sub-card-details{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sub-card-detail{font-size:11px;color:var(--muted)}
+.sub-card-detail span{color:var(--text)}
+
+/* ZONE */
+.zone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.zone-card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px}
+.zone-name{font-size:12px;font-weight:500;margin-bottom:4px}
+.zone-count{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.zone-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.zone-fill{height:100%;background:var(--gold);border-radius:2px}
+.zone-sub{font-size:10px;color:var(--muted)}
+
+/* TIER */
+.tier-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.tier-row:last-child{border-bottom:none}
+.tier-left{display:flex;align-items:center;gap:10px}
+.tier-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tier-name{font-size:13px;font-weight:500}
+.tier-bar-wrap{flex:1;margin:0 14px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.tier-bar-fill{height:100%;border-radius:2px}
+.tier-count{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.tier-mrr{font-size:10px;color:var(--muted);margin-top:1px}
+
+.loading{display:flex;align-items:center;justify-content:center;padding:36px;color:var(--muted);font-size:12px;gap:8px}
+.spinner{width:14px;height:14px;border:2px solid var(--surface3);border-top-color:var(--gold);border-radius:50%;animation:spin 0.6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{padding:36px;text-align:center;color:var(--muted);font-size:13px}
+
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;padding:10px 18px;font-size:12px;transition:transform 0.3s;z-index:100;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.view{display:none}
+.view.active{display:block}
+
+/* MOBILE OVERRIDES */
+@media(max-width:768px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .bottom-nav{display:block}
+  .main{padding:16px 14px 80px}
+  .metrics{grid-template-columns:1fr 1fr}
+  .metric{padding:12px}
+  .metric-value{font-size:22px}
+  .zone-grid{grid-template-columns:1fr 1fr}
+  .table-head.hg,.table-row.hg{display:none}
+  .toast{bottom:80px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">B</div>
+      <div class="brand-name">BOXD</div>
+    </div>
+    <button class="nav-item active" onclick="showView('overview',this)">
+      <span class="nav-icon">◉</span> Overview
+    </button>
+    <button class="nav-item" onclick="showView('subscribers',this)">
+      <span class="nav-icon">◈</span> Subscribers
+    </button>
+    <button class="nav-item" onclick="showView('zones',this)">
+      <span class="nav-icon">◎</span> Zones
+    </button>
+    <button class="nav-item" onclick="showView('events',this)">
+      <span class="nav-icon">◇</span> Events
+    </button>
+    <div class="nav-section">Operations</div>
+    <button class="nav-item" onclick="showView('dispatch',this)">
+      <span class="nav-icon">▷</span> Dispatch
+    </button>
+    <div class="sidebar-bottom">
+      <button class="dispatch-btn" onclick="showToast('Pick list sent to suppliers ✓')">Send pick list ↗</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div id="view-overview" class="view active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Overview</div>
+          <div class="page-sub" id="last-updated">Loading...</div>
+        </div>
+        <button class="refresh-btn" onclick="loadAll()">↺</button>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Subscribers</div>
+          <div class="metric-value gold" id="m-total">—</div>
+          <div class="metric-sub" id="m-total-sub">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Proj. MRR</div>
+          <div class="metric-value" id="m-mrr">—</div>
+          <div class="metric-sub">per cycle</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Zones</div>
+          <div class="metric-value" id="m-zones">—</div>
+          <div class="metric-sub">neighborhoods</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">This week</div>
+          <div class="metric-value green" id="m-week">—</div>
+          <div class="metric-sub">new signups</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Tier breakdown</div>
+        <div class="table-wrap" style="padding:14px">
+          <div id="tier-breakdown"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-title">Recent signups</div>
+        <div class="table-wrap">
+          <div class="table-head hg"><span>Name</span><span>Phone</span><span>Neighborhood</span><span>Tier</span><span>Joined</span></div>
+          <div id="recent-table"></div>
+          <div id="recent-cards"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-subscribers" class="view">
+      <div class="page-header">
+        <div><div class="page-title">Subscribers</div><div class="page-sub">All households</div></div>
+        <button class="refresh-btn" onclick="loadSubscribers()">↺</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head hg"><span>Name</span><span>Phone</span><span>Neighborhood</span><span>Tier</span><span>Joined</span></div>
+        <div id="all-table"></div>
+        <div id="all-cards"></div>
+      </div>
+    </div>
+
+    <div id="view-zones" class="view">
+      <div class="page-header">
+        <div><div class="page-title">Zones</div><div class="page-sub">By neighborhood</div></div>
+      </div>
+      <div class="zone-grid" id="zone-grid"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+
+    <div id="view-events" class="view">
+      <div class="page-header">
+        <div><div class="page-title">Events</div><div class="page-sub">Behavior log</div></div>
+        <button class="refresh-btn" onclick="loadEvents()">↺</button>
+      </div>
+      <div id="events-cards"></div>
+    </div>
+
+    <div id="view-dispatch" class="view">
+      <div class="page-header">
+        <div><div class="page-title">Dispatch</div><div class="page-sub">Next delivery</div></div>
+      </div>
+      <div class="table-wrap" style="padding:16px" id="dispatch-summary">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+      <button style="width:100%;margin-top:12px;padding:14px;background:var(--gold);color:var(--dark);border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer" onclick="showToast('Pick list sent ✓')">Send pick list to suppliers ↗</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="bottom-nav-items">
+    <button class="bottom-nav-item active" onclick="showView('overview',this)">
+      <span class="bottom-nav-icon">◉</span>
+      <span class="bottom-nav-label">Overview</span>
+    </button>
+    <button class="bottom-nav-item" onclick="showView('subscribers',this)">
+      <span class="bottom-nav-icon">◈</span>
+      <span class="bottom-nav-label">Subscribers</span>
+    </button>
+    <button class="bottom-nav-item" onclick="showView('zones',this)">
+      <span class="bottom-nav-icon">◎</span>
+      <span class="bottom-nav-label">Zones</span>
+    </button>
+    <button class="bottom-nav-item" onclick="showView('events',this)">
+      <span class="bottom-nav-icon">◇</span>
+      <span class="bottom-nav-label">Events</span>
+    </button>
+    <button class="bottom-nav-item" onclick="showView('dispatch',this)">
+      <span class="bottom-nav-icon">▷</span>
+      <span class="bottom-nav-label">Dispatch</span>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://rctoxlqcitcpsirbllrk.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjdG94bHFjaXRjcHNpcmJsbHJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzNDM4MzgsImV4cCI6MjA5NTkxOTgzOH0.hQK1HKvd2YWMfCn1zKCITa7MXTsVEYx41WCrc3FZ0Ao'
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const TIER_PRICES = {essentials:280,family:480,premium:720}
+
+function showView(v, el) {
+  document.querySelectorAll('.view').forEach(e => e.classList.remove('active'))
+  document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(e => e.classList.remove('active'))
+  document.getElementById('view-' + v).classList.add('active')
+  if (el) el.classList.add('active')
+  if (v==='subscribers') loadSubscribers()
+  if (v==='zones') loadZones()
+  if (v==='events') loadEvents()
+  if (v==='dispatch') loadDispatch()
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - new Date(ts)
+  const mins = Math.floor(diff/60000)
+  if (mins < 60) return mins + 'm ago'
+  const hrs = Math.floor(mins/60)
+  if (hrs < 24) return hrs + 'h ago'
+  return Math.floor(hrs/24) + 'd ago'
+}
+
+function tierBadge(t) { return `<span class="badge badge-${t||'essentials'}">${t||'essentials'}</span>` }
+function sourceBadge(s) { return `<span class="badge badge-${s||'organic'}">${s||'organic'}</span>` }
+
+function tableRow(h) {
+  return `<div class="table-row hg">
+    <div><div class="cell-name">${h.name}</div><div class="cell-sub">${h.email||''}</div></div>
+    <div class="cell-muted">${h.phone}</div>
+    <div class="cell-muted">${h.neighborhood}</div>
+    <div>${tierBadge(h.current_tier)}</div>
+    <div class="cell-muted">${timeAgo(h.created_at)}</div>
+  </div>`
+}
+
+function mobileCard(h) {
+  return `<div class="sub-card">
+    <div class="sub-card-top">
+      <div class="sub-card-name">${h.name}</div>
+      <div class="sub-card-time">${timeAgo(h.created_at)}</div>
+    </div>
+    <div class="sub-card-details">
+      <div class="sub-card-detail">Phone <span>${h.phone}</span></div>
+      <div class="sub-card-detail">Zone <span>${h.neighborhood}</span></div>
+      <div class="sub-card-detail">Tier <span>${h.current_tier||'essentials'}</span></div>
+      <div class="sub-card-detail">Source <span>${h.acquisition_source||'organic'}</span></div>
+    </div>
+  </div>`
+}
+
+async function loadAll() {
+  document.getElementById('last-updated').textContent = 'Refreshing...'
+  const {data:h} = await db.from('households').select('*').order('created_at',{ascending:false})
+  if (!h) return
+
+  const total = h.length
+  const mrr = h.reduce((s,x) => s+(TIER_PRICES[x.current_tier]||280),0)
+  const zones = [...new Set(h.map(x=>x.neighborhood))].length
+  const weekAgo = new Date(Date.now()-7*24*60*60*1000)
+  const week = h.filter(x=>new Date(x.created_at)>weekAgo).length
+
+  document.getElementById('m-total').textContent = total
+  document.getElementById('m-total-sub').textContent = total + ' household' + (total!==1?'s':'')
+  document.getElementById('m-mrr').textContent = 'P '+mrr.toLocaleString()
+  document.getElementById('m-zones').textContent = zones
+  document.getElementById('m-week').textContent = week
+  document.getElementById('last-updated').textContent = 'Updated '+new Date().toLocaleTimeString()
+
+  const tiers = {essentials:0,family:0,premium:0}
+  h.forEach(x => tiers[x.current_tier||'essentials']++)
+  const tc = {essentials:'var(--blue)',family:'var(--gold)',premium:'var(--green)'}
+  const max = Math.max(...Object.values(tiers))||1
+  document.getElementById('tier-breakdown').innerHTML = Object.entries(tiers).map(([t,c])=>`
+    <div class="tier-row">
+      <div class="tier-left"><div class="tier-dot" style="background:${tc[t]}"></div><div class="tier-name" style="text-transform:capitalize">${t}</div></div>
+      <div class="tier-bar-wrap"><div class="tier-bar-fill" style="width:${(c/max)*100}%;background:${tc[t]}"></div></div>
+      <div><div class="tier-count">${c}</div><div class="tier-mrr">P ${(c*TIER_PRICES[t]).toLocaleString()}</div></div>
+    </div>`).join('')
+
+  const recent = h.slice(0,10)
+  document.getElementById('recent-table').innerHTML = recent.map(tableRow).join('')
+  document.getElementById('recent-cards').innerHTML = recent.map(mobileCard).join('')
+}
+
+async function loadSubscribers() {
+  document.getElementById('all-table').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>'
+  const {data} = await db.from('households').select('*').order('created_at',{ascending:false})
+  document.getElementById('all-table').innerHTML = data?.length ? data.map(tableRow).join('') : ''
+  document.getElementById('all-cards').innerHTML = data?.length ? data.map(mobileCard).join('') : '<div class="empty">No subscribers yet.</div>'
+}
+
+async function loadZones() {
+  const {data} = await db.from('households').select('neighborhood,current_tier')
+  if (!data) return
+  const zm = {}
+  data.forEach(h => {
+    if (!zm[h.neighborhood]) zm[h.neighborhood]={total:0,tiers:{}}
+    zm[h.neighborhood].total++
+    const t = h.current_tier||'essentials'
+    zm[h.neighborhood].tiers[t]=(zm[h.neighborhood].tiers[t]||0)+1
+  })
+  const max = Math.max(...Object.values(zm).map(z=>z.total))||1
+  document.getElementById('zone-grid').innerHTML = Object.entries(zm)
+    .sort((a,b)=>b[1].total-a[1].total)
+    .map(([zone,info])=>`
+      <div class="zone-card">
+        <div class="zone-name">${zone}</div>
+        <div class="zone-count">${info.total}</div>
+        <div class="zone-bar"><div class="zone-fill" style="width:${(info.total/max)*100}%"></div></div>
+        <div class="zone-sub">${Object.entries(info.tiers).map(([t,c])=>c+' '+t).join(' · ')}</div>
+      </div>`).join('')
+}
+
+async function loadEvents() {
+  document.getElementById('events-cards').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>'
+  const {data} = await db.from('events').select('*').order('created_at',{ascending:false}).limit(30)
+  document.getElementById('events-cards').innerHTML = data?.length
+    ? data.map(e=>`
+        <div class="sub-card">
+          <div class="sub-card-top">
+            <span class="badge badge-active">${e.event_type}</span>
+            <div class="sub-card-time">${timeAgo(e.created_at)}</div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:monospace;word-break:break-all">${JSON.stringify(e.event_properties||{}).slice(0,120)}</div>
+        </div>`).join('')
+    : '<div class="empty">No events yet.</div>'
+}
+
+async function loadDispatch() {
+  const {data} = await db.from('households').select('name,phone,neighborhood,current_tier')
+  if (!data) return
+  const tc = {essentials:0,family:0,premium:0}
+  data.forEach(h=>tc[h.current_tier||'essentials']++)
+  const rev = data.reduce((s,h)=>s+(TIER_PRICES[h.current_tier]||280),0)
+  const cost = tc.essentials*210+tc.family*360+tc.premium*540
+  const drivers = data.length*30
+  const margin = rev-cost-drivers
+  document.getElementById('dispatch-summary').innerHTML = `
+    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px">Next dispatch</div>
+    ${Object.entries(tc).map(([t,c])=>`
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px">
+        <span style="color:var(--muted);text-transform:capitalize">${t} Box</span>
+        <span style="font-weight:500">${c} orders</span>
+      </div>`).join('')}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px">
+      <span style="color:var(--muted)">Revenue</span><span style="color:var(--gold);font-weight:500">P ${rev.toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px">
+      <span style="color:var(--muted)">Supplier cost</span><span>P ${cost.toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px">
+      <span style="color:var(--muted)">Driver payouts</span><span>P ${drivers.toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:14px">
+      <span style="color:var(--muted)">Net margin</span>
+      <span style="color:var(--green);font-family:'Syne',sans-serif;font-weight:700">P ${margin.toLocaleString()}</span>
+    </div>`
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast')
+  t.textContent=msg;t.classList.add('show')
+  setTimeout(()=>t.classList.remove('show'),2500)
+}
+
+loadAll()
+</script>
+</body>
+</html>
